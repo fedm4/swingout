@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { MapPin, Calendar, Globe, Ticket, CheckCircle, Star, Plus } from 'lucide-react'
+import { isSafeUrl } from '@/lib/utils'
 import {
   useEvent,
   useEventAttendees,
@@ -109,7 +110,7 @@ export function EventPage() {
                   {formatDateRange(event.start_date, event.end_date)}
                 </span>
               )}
-              {event.website && (
+              {event.website && isSafeUrl(event.website) && (
                 <a
                   href={event.website}
                   target="_blank"

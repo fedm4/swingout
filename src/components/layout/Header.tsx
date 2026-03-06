@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { Music, LogOut, User } from 'lucide-react'
+import { Music, LogOut, Plus } from 'lucide-react'
 import { useAuth, signOut } from '@/hooks/useAuth'
 import { Avatar } from '@/components/ui/Avatar'
 import { Button } from '@/components/ui/Button'
@@ -22,8 +22,14 @@ export function Header() {
         </Link>
 
         <nav className="flex items-center gap-2">
-          {user ? (
+          {user && (
             <>
+              <Link to="/events/new">
+                <Button size="sm" variant="outline">
+                  <Plus className="h-4 w-4" />
+                  Evento
+                </Button>
+              </Link>
               <Link to="/profile">
                 <Avatar
                   src={profile?.avatar_url}
@@ -36,13 +42,6 @@ export function Header() {
                 <LogOut className="h-4 w-4" />
               </Button>
             </>
-          ) : (
-            <Link to="/auth">
-              <Button size="sm" variant="outline">
-                <User className="h-4 w-4" />
-                Entrar
-              </Button>
-            </Link>
           )}
         </nav>
       </div>

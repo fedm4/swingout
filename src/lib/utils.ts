@@ -28,6 +28,15 @@ export function formatDateRange(
   return `${formatDate(start)} – ${formatDate(end)}`
 }
 
+export function isSafeUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url)
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:'
+  } catch {
+    return false
+  }
+}
+
 export function getInitials(name: string | null | undefined): string {
   if (!name) return '?'
   return name

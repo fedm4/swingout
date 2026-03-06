@@ -140,30 +140,10 @@ create table public.groups (
 
 alter table public.groups enable row level security;
 
-create policy "groups_select_members_or_open"
-  on public.groups for select
-  using (
-    is_open = true
-    or auth.uid() = created_by
-    or exists (
-      select 1 from public.group_members
-      where group_id = groups.id and user_id = auth.uid()
-    )
-  );
-
+-- Simple policies that don't reference group_members (created after)
 create policy "groups_insert_authenticated"
   on public.groups for insert
   with check (auth.uid() is not null);
-
-create policy "groups_update_admin"
-  on public.groups for update
-  using (
-    auth.uid() = created_by
-    or exists (
-      select 1 from public.group_members
-      where group_id = groups.id and user_id = auth.uid() and role = 'admin'
-    )
-  );
 
 create policy "groups_delete_creator"
   on public.groups for delete
@@ -213,6 +193,28 @@ create policy "group_members_delete_self_or_admin"
     )
   );
 
+-- groups policies that reference group_members (deferred until after that table exists)
+create policy "groups_select_members_or_open"
+  on public.groups for select
+  using (
+    is_open = true
+    or auth.uid() = created_by
+    or exists (
+      select 1 from public.group_members
+      where group_id = groups.id and user_id = auth.uid()
+    )
+  );
+
+create policy "groups_update_admin"
+  on public.groups for update
+  using (
+    auth.uid() = created_by
+    or exists (
+      select 1 from public.group_members
+      where group_id = groups.id and user_id = auth.uid() and role = 'admin'
+    )
+  );
+
 -- ============================================================
 -- MESSAGES
 -- ============================================================
@@ -229,15 +231,42 @@ create table public.messages (
 
 alter table public.messages enable row level security;
 
--- For simplicity: authenticated users can read/write messages
--- In production, add finer-grained checks based on group membership
-create policy "messages_select_authenticated"
+-- Messages: only accessible to channel members
+create policy "messages_select_channel_members"
   on public.messages for select
-  using (auth.uid() is not null);
+  using (
+    auth.uid() is not null
+    and (
+      (channel_type = 'event' and exists (
+        select 1 from public.event_attendees
+        where event_attendees.event_id = messages.channel_id
+          and event_attendees.user_id = auth.uid()
+      ))
+      or (channel_type = 'group' and exists (
+        select 1 from public.group_members
+        where group_members.group_id = messages.channel_id
+          and group_members.user_id = auth.uid()
+      ))
+    )
+  );
 
-create policy "messages_insert_authenticated"
+create policy "messages_insert_channel_members"
   on public.messages for insert
-  with check (auth.uid() = user_id);
+  with check (
+    auth.uid() = user_id
+    and (
+      (channel_type = 'event' and exists (
+        select 1 from public.event_attendees
+        where event_attendees.event_id = messages.channel_id
+          and event_attendees.user_id = auth.uid()
+      ))
+      or (channel_type = 'group' and exists (
+        select 1 from public.group_members
+        where group_members.group_id = messages.channel_id
+          and group_members.user_id = auth.uid()
+      ))
+    )
+  );
 
 -- ============================================================
 -- TRANSPORT OFFERS

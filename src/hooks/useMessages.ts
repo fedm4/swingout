@@ -35,7 +35,7 @@ export function useMessages(channelType: ChannelType, channelId: string) {
           event: 'INSERT',
           schema: 'public',
           table: 'messages',
-          filter: `channel_type=eq.${channelType}`,
+          filter: `channel_type=eq.${channelType},channel_id=eq.${channelId}`,
         },
         async (payload) => {
           if (payload.new.channel_id !== channelId) return

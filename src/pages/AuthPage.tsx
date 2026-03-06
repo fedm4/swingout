@@ -1,13 +1,16 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { Music } from 'lucide-react'
-import { signInWithEmail, signUpWithEmail } from '@/hooks/useAuth'
+import { useAuth, signInWithEmail, signUpWithEmail } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/Button'
 
 type Mode = 'login' | 'signup'
 
 export function AuthPage() {
+  const { user } = useAuth()
   const navigate = useNavigate()
+
+  if (user) return <Navigate to="/" replace />
   const [mode, setMode] = useState<Mode>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
