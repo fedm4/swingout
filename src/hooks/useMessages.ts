@@ -38,18 +38,13 @@ export function useMessages(channelType: ChannelType, channelId: string) {
           filter: `channel_id=eq.${channelId}`,
         },
         async (payload) => {
-          console.log('[Realtime] INSERT received:', payload)
-          if (payload.new.channel_id !== channelId) {
-            console.log('[Realtime] Skipping - channel_id mismatch:', payload.new.channel_id, '!==', channelId)
-            return
-          }
+          if (payload.new.channel_id !== channelId) return
           // Fetch the new message with profile join
-          const { data, error } = await supabase
+          const { data } = await supabase
             .from('messages')
             .select('*, profiles(id, username, full_name, avatar_url)')
             .eq('id', payload.new.id)
             .single()
-          if (error) console.error('[Realtime] Error fetching full message:', error)
           if (data) {
             queryClient.setQueryData(
               ['messages', channelType, channelId],
@@ -59,7 +54,6 @@ export function useMessages(channelType: ChannelType, channelId: string) {
         }
       )
       .subscribe((status) => {
-        console.log('[Realtime] subscription status:', status)
         setIsSubscribed(status === 'SUBSCRIBED')
       })
 
